@@ -1,197 +1,119 @@
-let subnetStates = [];
-let subnetBitsElements = [];
-let timer = null;
+let subnetStates=[];
+let subnetBits=[];
+let timer=null;
+let playing=false;
 
-// βοηθητικά
-function ipToInt(ip){ return ip.split('.').reduce((a,b)=>(a<<8)+ +b,0); }
-function intToIp(int){ return [(int>>>24)&255,(int>>>16)&255,(int>>>8)&255,int&255].join('.'); }
-function toBinary32(n){ return n.toString(2).padStart(32,'0'); }
-function neededBitsForSubnets(n){ return Math.ceil(Math.log2(n)); }
-function neededBitsForHosts(n){ return Math.ceil(Math.log2(n+2)); }
+/* ---------------- utils ---------------- */
 
-// κύρια λειτουργία
+function ipToInt(ip){
+  return ip.split('.').reduce((a,b)=>(a<<8)+ +b,0);
+}
+
+function intToIp(int){
+  return [(int>>>24)&255,(int>>>16)&255,(int>>>8)&255,int&255].join('.');
+}
+
+function toBinary32(n){
+  return n.toString(2).padStart(32,'0');
+}
+
+function bitsForSubnets(n){ return Math.ceil(Math.log2(n)); }
+function bitsForHosts(n){ return Math.ceil(Math.log2(n+2)); }
+
+/* ---------------- start ---------------- */
+
 function start(){
-  clearInterval(timer);
+
+  stopAnimation();
+
   const ip=document.getElementById("ip").value;
-  const baseCidr=parseInt(document.getElementById("baseCidr").value);
+  const base=parseInt(document.getElementById("baseCidr").value);
   const mode=document.querySelector("input[name=mode]:checked").value;
 
-  let borrowBits;
+  let borrow;
+
   if(mode==="subnets"){
-    const count=parseInt(document.getElementById("subnetCount").value);
-    borrowBits=neededBitsForSubnets(count);
-  } else {
-    const hosts=parseInt(document.getElementById("hostCount").value);
-    borrowBits=(32-baseCidr)-neededBitsForHosts(hosts);
+    borrow=bitsForSubnets(parseInt(document.getElementById("subnetCount").value));
+  }else{
+    borrow=(32-base)-bitsForHosts(parseInt(document.getElementById("hostCount").value));
   }
 
-  const newCidr=baseCidr+borrowBits;
+  const cidr=base+borrow;
   const ipInt=ipToInt(ip);
 
-  document.getElementById("info").innerText=`Νέο CIDR: /${newCidr} | Borrowed bits: ${borrowBits}`;
+  document.getElementById("info").innerText=`Νέο CIDR: /${cidr} | Borrowed bits: ${borrow}`;
 
-  createBinaryView(ipInt,baseCidr,borrowBits);
-  calculateSubnets(ipInt,newCidr);
+  buildBinaryAnimated(ipInt,base,borrow);
+  calculateSubnets(ipInt,cidr);
 }
 
-// binary view με dots ανά byte
-function createBinaryView(ipInt, baseCidr, borrowBits){
-  const bitsDiv=document.getElementById("bits");
-  bitsDiv.innerHTML="";
-  subnetBitsElements=[];
+/* ---------------- animated build ---------------- */
 
-  let bin=toBinary32(ipInt);
-  let byteCount=0;
+function buildBinaryAnimated(ipInt,base,borrow){
 
-  for(let i=0;i<32;i++){
-    const s=document.createElement("span");
-    s.innerText=bin[i];
-    s.classList.add("bit");
-
-    if(i<baseCidr) s.classList.add("network");
-    else if(i<baseCidr+borrowBits){ 
-      s.classList.add("subnet");
-      subnetBitsElements.push(s);
-    } else s.classList.add("host");
-
-    bitsDiv.appendChild(s);
-
-    byteCount++;
-    if(byteCount===8 && i<31){
-      const dot=document.createElement("span");
-      dot.innerText="."; 
-      dot.classList.add("dot");
-      dot.style.margin="0 4px";
-      dot.style.color="#4CAF50";
-      bitsDiv.appendChild(dot);
-      byteCount=0;
-    }
-  }
-}
-
-// υπολογισμός subnets
-function calculateSubnets(ipInt,cidr){
-  const tbody=document.querySelector("#table tbody");
-  tbody.innerHTML="";
-  subnetStates=[];
-
-  const hostBits=32-cidr;
-  const block=2**hostBits;
-  const count=2**(cidr - Math.floor(cidr/8)*8);
-
-  for(let i=0;i<count;i++){
-    const net=ipInt+i*block;
-    subnetStates.push(toBinary32(net));
-    const first=net+1;
-    const last=net+block-2;
-    const bc=net+block-1;
-
-    tbody.innerHTML+=`
-      <tr>
-        <td>${i}</td>
-        <td>${intToIp(net)}</td>
-        <td>${intToIp(first)}</td>
-        <td>${intToIp(last)}</td>
-        <td>${intToIp(bc)}</td>
-      </tr>`;
-  }
-}
-
-// animation step-by-step με flip effect
-function animate(){
-  if(!subnetStates.length) return;
-  let i=0;
-  clearInterval(timer);
-
-  timer=setInterval(()=>{
-    const state=subnetStates[i];
-    subnetBitsElements.forEach((el,idx)=>{
-      const pos=32-subnetBitsElements.length+idx;
-
-      // simple flip animation
-      el.style.transform="rotateX(90deg)";
-      setTimeout(()=>{
-        el.innerText=state[pos];
-        el.style.transform="rotateX(0deg)";
-      },150);
-    });
-
-    i=(i+1)%subnetStates.length;
-  },800);
-}
-
-// events για mobile / touch
-document.getElementById("startBtn").addEventListener("click",start);
-document.getElementById("animateBtn").addEventListener("click",animate);
-
-// φορτώνει αυτόματα
-start();// binary view
-function createBinaryView(ipInt, baseCidr, borrowBits){
-  const bitsDiv=document.getElementById("bits");
-  bitsDiv.innerHTML="";
-  subnetBitsElements=[];
+  const div=document.getElementById("bits");
+  div.innerHTML="";
+  subnetBits=[];
 
   const bin=toBinary32(ipInt);
 
-  for(let i=0;i<32;i++){
+  let i=0;
+
+  const interval=setInterval(()=>{
+
+    if(i>=32){ clearInterval(interval); return; }
+
     const s=document.createElement("span");
-    s.innerText=bin[i];
-    s.classList.add("bit");
-    if(i<baseCidr) s.classList.add("network");
-    else if(i<baseCidr+borrowBits){ 
+    s.textContent=bin[i];
+    s.className="bit";
+
+    if(i<base) s.classList.add("network");
+    else if(i<base+borrow){
       s.classList.add("subnet");
-      subnetBitsElements.push(s);
-    } else s.classList.add("host");
-    bitsDiv.appendChild(s);
-  }
+      subnetBits.push(s);
+    }
+    else s.classList.add("host");
+
+    div.appendChild(s);
+
+    if((i+1)%8===0 && i!==31){
+      const dot=document.createElement("span");
+      dot.textContent=".";
+      dot.className="dot";
+      div.appendChild(dot);
+    }
+
+    i++;
+
+  },40); // speed build
 }
 
-// υπολογισμός subnets
+/* ---------------- subnets calc ---------------- */
+
 function calculateSubnets(ipInt,cidr){
+
+  subnetStates=[];
+
   const tbody=document.querySelector("#table tbody");
   tbody.innerHTML="";
-  subnetStates=[];
 
   const hostBits=32-cidr;
   const block=2**hostBits;
-  const count=2**(cidr - Math.floor(cidr/8)*8);
 
-  for(let i=0;i<count;i++){
-    const net=ipInt+i*block;
+  let index=0;
+
+  for(let net=ipInt; net<ipInt+block*(2**(cidr-ipToCidrBase(ipInt))); net+=block){
+
     subnetStates.push(toBinary32(net));
+
     const first=net+1;
     const last=net+block-2;
     const bc=net+block-1;
 
     tbody.innerHTML+=`
-      <tr>
-        <td>${i}</td>
-        <td>${intToIp(net)}</td>
-        <td>${intToIp(first)}</td>
-        <td>${intToIp(last)}</td>
-        <td>${intToIp(bc)}</td>
-      </tr>`;
-  }
-}
-
-// animation step-by-step
-function animate(){
-  if(!subnetStates.length) return;
-  let i=0;
-  clearInterval(timer);
-  timer=setInterval(()=>{
-    const state=subnetStates[i];
-    subnetBitsElements.forEach((el,idx)=>{
-      const pos=32-subnetBitsElements.length+idx;
-      el.innerText=state[pos];
-    });
-    i=(i+1)%subnetStates.length;
-  },800);
-}
-
-// events για mobile / touch
-document.getElementById("startBtn").addEventListener("click",start);
-document.getElementById("animateBtn").addEventListener("click",animate);
-
-// φορτώνει αυτόματα
-start();
+    <tr>
+      <td>${index}</td>
+      <td>${intToIp(net)}</td>
+      <td>${intToIp(first)}</td>
+      <td>${intToIp(last)}</td>
+      <td>${intToIp(bc)}</td
