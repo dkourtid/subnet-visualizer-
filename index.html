@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <title>Subnetting Visualizer Pro</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<h1>🌐 Subnetting Visualizer (Εκπαιδευτικό)</h1>
+
+<div class="controls">
+
+  <label>IP:</label>
+  <input id="ip" value="192.168.1.0">
+
+  <label>Βασικό CIDR:</label>
+  <input id="baseCidr" type="number" value="24">
+
+  <hr>
+
+  <h3>Επίλεξε έναν τρόπο υπολογισμού:</h3>
+
+  <label>
+    <input type="radio" name="mode" value="subnets" checked>
+    Αριθμός Υποδικτύων
+  </label>
+  <input id="subnetCount" type="number" value="4">
+
+  <br><br>
+
+  <label>
+    <input type="radio" name="mode" value="hosts">
+    Hosts ανά Υποδίκτυο
+  </label>
+  <input id="hostCount" type="number" value="50">
+
+  <br><br>
+
+  <button onclick="start()">Υπολογισμός</button>
+  <button onclick="animate()">Animation</button>
+
+</div>
+
+<h2 id="info"></h2>
+
+<h2>Binary View</h2>
+<div id="bits"></div>
+
+<h2>Subnets</h2>
+<table id="table">
+<thead>
+<tr>
+<th>#</th>
+<th>Network</th>
+<th>First</th>
+<th>Last</th>
+<th>Broadcast</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<script src="script.js"></script>
+</body>
+</html>
