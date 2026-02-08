@@ -1,10 +1,11 @@
 body{
   font-family: Arial;
-  margin:20px;
-  background:#f2f2f2;
+  background:#f3f3f3;
+  padding:20px;
 }
 
-h1{text-align:center; font-size:1.8em;}
+h1{text-align:center}
+
 .controls{
   background:white;
   padding:15px;
@@ -12,61 +13,71 @@ h1{text-align:center; font-size:1.8em;}
   margin-bottom:20px;
 }
 
-.controls label{font-weight:bold;}
-.controls input[type="number"], input[type="text"]{
-  width:100%;
-  max-width:200px;
-  margin:5px 0;
+input{
   padding:4px;
+  margin:4px;
 }
 
 button{
   padding:8px 12px;
-  font-size:1em;
-  margin-right:8px;
   border:none;
-  border-radius:5px;
-  background:#2196F3;
+  border-radius:6px;
+  background:#1976d2;
   color:white;
   cursor:pointer;
 }
-button:active{background:#1976D2;}
+
+button:active{
+  transform:scale(0.95);
+}
 
 #bits{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
   font-family:monospace;
-  font-size:24px;
-  letter-spacing:4px;
+  font-size:22px;
   margin:15px 0;
-  word-wrap: break-word;
 }
 
 .bit{
-  display:inline-block;
-  padding:4px;
+  width:20px;
+  text-align:center;
   border-radius:4px;
-  transition: all 0.3s ease;
+  padding:3px;
+  transition:all .25s;
 }
 
-.network{background:#4CAF50; color:white;}
-.subnet{background:#FF9800; color:white;}
-.host{background:#ddd;}
+.network{background:#4caf50;color:white}
+.subnet{background:#ff9800;color:white}
+.host{background:#e0e0e0}
+
+.dot{
+  font-weight:bold;
+  margin:0 6px;
+}
+
+.legend span{
+  padding:6px 10px;
+  margin-right:10px;
+  border-radius:6px;
+  color:white;
+  font-size:14px;
+}
 
 table{
   width:100%;
   border-collapse:collapse;
   background:white;
-  font-size:0.9em;
 }
 
 th,td{
   border:1px solid #ccc;
-  padding:5px;
+  padding:6px;
   text-align:center;
 }
 
-th{background:#333; color:white;}
-
-@media screen and (max-width:600px){
-  #bits{font-size:18px; letter-spacing:2px;}
-  button{width:48%; margin-bottom:10px;}
+th{
+  background:#333;
+  color:white;
 }
