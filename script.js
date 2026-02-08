@@ -34,7 +34,98 @@ function start(){
   calculateSubnets(ipInt,newCidr);
 }
 
-// binary view
+// binary view με dots ανά byte
+function createBinaryView(ipInt, baseCidr, borrowBits){
+  const bitsDiv=document.getElementById("bits");
+  bitsDiv.innerHTML="";
+  subnetBitsElements=[];
+
+  let bin=toBinary32(ipInt);
+  let byteCount=0;
+
+  for(let i=0;i<32;i++){
+    const s=document.createElement("span");
+    s.innerText=bin[i];
+    s.classList.add("bit");
+
+    if(i<baseCidr) s.classList.add("network");
+    else if(i<baseCidr+borrowBits){ 
+      s.classList.add("subnet");
+      subnetBitsElements.push(s);
+    } else s.classList.add("host");
+
+    bitsDiv.appendChild(s);
+
+    byteCount++;
+    if(byteCount===8 && i<31){
+      const dot=document.createElement("span");
+      dot.innerText="."; 
+      dot.classList.add("dot");
+      dot.style.margin="0 4px";
+      dot.style.color="#4CAF50";
+      bitsDiv.appendChild(dot);
+      byteCount=0;
+    }
+  }
+}
+
+// υπολογισμός subnets
+function calculateSubnets(ipInt,cidr){
+  const tbody=document.querySelector("#table tbody");
+  tbody.innerHTML="";
+  subnetStates=[];
+
+  const hostBits=32-cidr;
+  const block=2**hostBits;
+  const count=2**(cidr - Math.floor(cidr/8)*8);
+
+  for(let i=0;i<count;i++){
+    const net=ipInt+i*block;
+    subnetStates.push(toBinary32(net));
+    const first=net+1;
+    const last=net+block-2;
+    const bc=net+block-1;
+
+    tbody.innerHTML+=`
+      <tr>
+        <td>${i}</td>
+        <td>${intToIp(net)}</td>
+        <td>${intToIp(first)}</td>
+        <td>${intToIp(last)}</td>
+        <td>${intToIp(bc)}</td>
+      </tr>`;
+  }
+}
+
+// animation step-by-step με flip effect
+function animate(){
+  if(!subnetStates.length) return;
+  let i=0;
+  clearInterval(timer);
+
+  timer=setInterval(()=>{
+    const state=subnetStates[i];
+    subnetBitsElements.forEach((el,idx)=>{
+      const pos=32-subnetBitsElements.length+idx;
+
+      // simple flip animation
+      el.style.transform="rotateX(90deg)";
+      setTimeout(()=>{
+        el.innerText=state[pos];
+        el.style.transform="rotateX(0deg)";
+      },150);
+    });
+
+    i=(i+1)%subnetStates.length;
+  },800);
+}
+
+// events για mobile / touch
+document.getElementById("startBtn").addEventListener("click",start);
+document.getElementById("animateBtn").addEventListener("click",animate);
+
+// φορτώνει αυτόματα
+start();// binary view
 function createBinaryView(ipInt, baseCidr, borrowBits){
   const bitsDiv=document.getElementById("bits");
   bitsDiv.innerHTML="";
