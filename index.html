@@ -1,27 +1,45 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Subnet Visualizer</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Subnet Visualizer</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <h1>🌐 Subnetting Visualizer</h1>
 
-IP <input id="ip" value="192.168.1.0">
-CIDR <input id="baseCidr" type="number" value="24">
+<div class="panel">
 
-<br><br>
+  <label>IP:</label>
+  <input id="ip" value="192.168.1.0">
 
-<button id="startBtn">Υπολογισμός</button>
-<button id="animateBtn">▶ Play</button>
+  <label>CIDR:</label>
+  <input id="cidr" type="number" value="24">
 
-<h2 id="info"></h2>
+  <button id="startBtn">Υπολογισμός</button>
+  <button id="playBtn">Play Animation</button>
+
+</div>
+
+<h3 id="info"></h3>
 
 <div id="bits"></div>
 
 <table id="table">
-<
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Network</th>
+      <th>First</th>
+      <th>Last</th>
+      <th>Broadcast</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script src="script.js"></script>
+</body>
+</html>
