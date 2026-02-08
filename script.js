@@ -1,9 +1,8 @@
 let subnetStates=[];
 let subnetBits=[];
 let timer=null;
-let playing=false;
 
-/* ---------------- utils ---------------- */
+/* helpers */
 
 function ipToInt(ip){
   return ip.split('.').reduce((a,b)=>(a<<8)+ +b,0);
@@ -17,39 +16,26 @@ function toBinary32(n){
   return n.toString(2).padStart(32,'0');
 }
 
-function bitsForSubnets(n){ return Math.ceil(Math.log2(n)); }
-function bitsForHosts(n){ return Math.ceil(Math.log2(n+2)); }
-
-/* ---------------- start ---------------- */
+/* start */
 
 function start(){
 
-  stopAnimation();
+  clearInterval(timer);
 
   const ip=document.getElementById("ip").value;
-  const base=parseInt(document.getElementById("baseCidr").value);
-  const mode=document.querySelector("input[name=mode]:checked").value;
+  const cidr=parseInt(document.getElementById("baseCidr").value);
 
-  let borrow;
-
-  if(mode==="subnets"){
-    borrow=bitsForSubnets(parseInt(document.getElementById("subnetCount").value));
-  }else{
-    borrow=(32-base)-bitsForHosts(parseInt(document.getElementById("hostCount").value));
-  }
-
-  const cidr=base+borrow;
   const ipInt=ipToInt(ip);
 
-  document.getElementById("info").innerText=`Νέο CIDR: /${cidr} | Borrowed bits: ${borrow}`;
+  document.getElementById("info").innerText=`CIDR: /${cidr}`;
 
-  buildBinaryAnimated(ipInt,base,borrow);
+  createBinary(ipInt,cidr);
   calculateSubnets(ipInt,cidr);
 }
 
-/* ---------------- animated build ---------------- */
+/* -------- Binary with BYTE GROUPS -------- */
 
-function buildBinaryAnimated(ipInt,base,borrow){
+function createBinary(ipInt,cidr){
 
   const div=document.getElementById("bits");
   div.innerHTML="";
@@ -57,38 +43,30 @@ function buildBinaryAnimated(ipInt,base,borrow){
 
   const bin=toBinary32(ipInt);
 
-  let i=0;
+  for(let b=0;b<4;b++){
 
-  const interval=setInterval(()=>{
+    const byte=document.createElement("div");
+    byte.className="byte";
 
-    if(i>=32){ clearInterval(interval); return; }
+    for(let i=0;i<8;i++){
 
-    const s=document.createElement("span");
-    s.textContent=bin[i];
-    s.className="bit";
+      const pos=b*8+i;
 
-    if(i<base) s.classList.add("network");
-    else if(i<base+borrow){
-      s.classList.add("subnet");
-      subnetBits.push(s);
-    }
-    else s.classList.add("host");
+      const s=document.createElement("span");
+      s.textContent=bin[pos];
+      s.className="bit";
 
-    div.appendChild(s);
+      if(pos<cidr) s.classList.add("network");
+      else s.classList.add("host");
 
-    if((i+1)%8===0 && i!==31){
-      const dot=document.createElement("span");
-      dot.textContent=".";
-      dot.className="dot";
-      div.appendChild(dot);
+      byte.appendChild(s);
     }
 
-    i++;
-
-  },40); // speed build
+    div.appendChild(byte);
+  }
 }
 
-/* ---------------- subnets calc ---------------- */
+/* -------- subnet calc -------- */
 
 function calculateSubnets(ipInt,cidr){
 
@@ -102,7 +80,7 @@ function calculateSubnets(ipInt,cidr){
 
   let index=0;
 
-  for(let net=ipInt; net<ipInt+block*(2**(cidr-ipToCidrBase(ipInt))); net+=block){
+  for(let net=ipInt; net<ipInt+block*8; net+=block){
 
     subnetStates.push(toBinary32(net));
 
@@ -116,4 +94,41 @@ function calculateSubnets(ipInt,cidr){
       <td>${intToIp(net)}</td>
       <td>${intToIp(first)}</td>
       <td>${intToIp(last)}</td>
-      <td>${intToIp(bc)}</td
+      <td>${intToIp(bc)}</td>
+    </tr>`;
+
+    index++;
+  }
+}
+
+/* -------- animation -------- */
+
+function animate(){
+
+  if(!subnetStates.length) return;
+
+  let i=0;
+
+  clearInterval(timer);
+
+  timer=setInterval(()=>{
+
+    const state=subnetStates[i];
+
+    const spans=document.querySelectorAll(".bit");
+
+    spans.forEach((el,idx)=>{
+      el.textContent=state[idx];
+    });
+
+    i=(i+1)%subnetStates.length;
+
+  },700);
+}
+
+/* events */
+
+document.getElementById("startBtn").onclick=start;
+document.getElementById("animateBtn").onclick=animate;
+
+start();
