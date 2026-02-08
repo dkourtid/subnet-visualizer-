@@ -1,35 +1,44 @@
 body{
-  font-family:Arial;
+  font-family: Arial;
   padding:20px;
 }
 
+/* panel ΠΑΝΤΑ ορατό */
+.panel{
+  margin-bottom:15px;
+}
+
+input, button{
+  padding:6px;
+  margin:5px;
+}
+
 #bits{
-  display:flex;
-  align-items:center;
-  font-family:monospace;
+  font-family: monospace;
   font-size:22px;
   margin:15px 0;
 }
 
+/* byte groups */
 .byte{
-  display:flex;
-  gap:3px;
-  padding:4px;
-  border-radius:6px;
-  margin-right:6px;
+  display:inline-block;
+  margin-right:8px;
 }
 
+/* bits */
 .bit{
+  display:inline-block;
   width:18px;
   text-align:center;
   border-radius:3px;
   padding:3px;
+  margin:1px;
 }
 
-.network{background:#4caf50;color:white}
-.subnet{background:#ff9800;color:white}
-.host{background:#ddd}
+.network{ background:#4caf50; color:white }
+.host{ background:#ddd }
 
+/* table */
 table{
   border-collapse:collapse;
   width:100%;
