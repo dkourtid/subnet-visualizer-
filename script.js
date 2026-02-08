@@ -1,5 +1,4 @@
 let subnetStates=[];
-let subnetBits=[];
 let timer=null;
 
 /* helpers */
@@ -16,57 +15,56 @@ function toBinary32(n){
   return n.toString(2).padStart(32,'0');
 }
 
-/* start */
+/* ---------------- start ---------------- */
 
 function start(){
 
   clearInterval(timer);
 
   const ip=document.getElementById("ip").value;
-  const cidr=parseInt(document.getElementById("baseCidr").value);
+  const cidr=parseInt(document.getElementById("cidr").value);
 
   const ipInt=ipToInt(ip);
 
-  document.getElementById("info").innerText=`CIDR: /${cidr}`;
+  document.getElementById("info").innerText="CIDR: /"+cidr;
 
   createBinary(ipInt,cidr);
   calculateSubnets(ipInt,cidr);
 }
 
-/* -------- Binary with BYTE GROUPS -------- */
+/* ---------------- binary view ---------------- */
 
 function createBinary(ipInt,cidr){
 
-  const div=document.getElementById("bits");
-  div.innerHTML="";
-  subnetBits=[];
+  const container=document.getElementById("bits");
+  container.innerHTML="";
 
   const bin=toBinary32(ipInt);
 
   for(let b=0;b<4;b++){
 
-    const byte=document.createElement("div");
+    const byte=document.createElement("span");
     byte.className="byte";
 
     for(let i=0;i<8;i++){
 
       const pos=b*8+i;
 
-      const s=document.createElement("span");
-      s.textContent=bin[pos];
-      s.className="bit";
+      const bit=document.createElement("span");
+      bit.textContent=bin[pos];
+      bit.className="bit";
 
-      if(pos<cidr) s.classList.add("network");
-      else s.classList.add("host");
+      if(pos<cidr) bit.classList.add("network");
+      else bit.classList.add("host");
 
-      byte.appendChild(s);
+      byte.appendChild(bit);
     }
 
-    div.appendChild(byte);
+    container.appendChild(byte);
   }
 }
 
-/* -------- subnet calc -------- */
+/* ---------------- subnet calc ---------------- */
 
 function calculateSubnets(ipInt,cidr){
 
@@ -78,32 +76,28 @@ function calculateSubnets(ipInt,cidr){
   const hostBits=32-cidr;
   const block=2**hostBits;
 
-  let index=0;
+  let i=0;
 
-  for(let net=ipInt; net<ipInt+block*8; net+=block){
+  for(let net=ipInt; i<8; net+=block){
 
     subnetStates.push(toBinary32(net));
 
-    const first=net+1;
-    const last=net+block-2;
-    const bc=net+block-1;
-
     tbody.innerHTML+=`
-    <tr>
-      <td>${index}</td>
-      <td>${intToIp(net)}</td>
-      <td>${intToIp(first)}</td>
-      <td>${intToIp(last)}</td>
-      <td>${intToIp(bc)}</td>
-    </tr>`;
+      <tr>
+        <td>${i}</td>
+        <td>${intToIp(net)}</td>
+        <td>${intToIp(net+1)}</td>
+        <td>${intToIp(net+block-2)}</td>
+        <td>${intToIp(net+block-1)}</td>
+      </tr>`;
 
-    index++;
+    i++;
   }
 }
 
-/* -------- animation -------- */
+/* ---------------- animation ---------------- */
 
-function animate(){
+function play(){
 
   if(!subnetStates.length) return;
 
@@ -115,20 +109,20 @@ function animate(){
 
     const state=subnetStates[i];
 
-    const spans=document.querySelectorAll(".bit");
+    const bits=document.querySelectorAll(".bit");
 
-    spans.forEach((el,idx)=>{
+    bits.forEach((el,idx)=>{
       el.textContent=state[idx];
     });
 
     i=(i+1)%subnetStates.length;
 
-  },700);
+  },800);
 }
 
 /* events */
 
 document.getElementById("startBtn").onclick=start;
-document.getElementById("animateBtn").onclick=animate;
+document.getElementById("playBtn").onclick=play;
 
 start();
