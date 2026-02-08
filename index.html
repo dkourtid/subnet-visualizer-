@@ -1,47 +1,33 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Subnetting Visualizer Pro - Mobile Friendly</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Subnetting Visualizer Animated</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<h1>🌐 Subnetting Visualizer (Mobile Friendly)</h1>
+<h1>🌐 Subnetting Visualizer Animated</h1>
 
 <div class="controls">
-
   <label>IP:</label>
-  <input id="ip" value="192.168.1.0">
+  <input id="ip" type="text" value="192.168.1.0">
 
   <label>Βασικό CIDR:</label>
   <input id="baseCidr" type="number" value="24" min="0" max="30">
 
-  <hr>
-
-  <h3>Επίλεξε τρόπο υπολογισμού:</h3>
-
-  <label>
-    <input type="radio" name="mode" value="subnets" checked>
-    Αριθμός Υποδικτύων
-  </label>
+  <h3>Υπολογισμός:</h3>
+  <label><input type="radio" name="mode" value="subnets" checked> Αριθμός Υποδικτύων</label>
   <input id="subnetCount" type="number" value="4" min="1">
 
   <br><br>
-
-  <label>
-    <input type="radio" name="mode" value="hosts">
-    Hosts ανά Υποδίκτυο
-  </label>
+  <label><input type="radio" name="mode" value="hosts"> Hosts ανά subnet</label>
   <input id="hostCount" type="number" value="50" min="1">
 
   <br><br>
-
   <button id="startBtn" type="button">Υπολογισμός</button>
   <button id="animateBtn" type="button">Animation</button>
-
 </div>
 
 <h2 id="info"></h2>
@@ -53,11 +39,7 @@
 <table id="table">
 <thead>
 <tr>
-<th>#</th>
-<th>Network</th>
-<th>First</th>
-<th>Last</th>
-<th>Broadcast</th>
+<th>#</th><th>Network</th><th>First</th><th>Last</th><th>Broadcast</th>
 </tr>
 </thead>
 <tbody></tbody>
