@@ -1,109 +1,70 @@
-let subnetStates = [];
-let subnetBitsElements = [];
-let timer = null;
-
-// βοηθητικά
-function ipToInt(ip){ return ip.split('.').reduce((a,b)=>(a<<8)+ +b,0); }
-function intToIp(int){ return [(int>>>24)&255,(int>>>16)&255,(int>>>8)&255,int&255].join('.'); }
-function toBinary32(n){ return n.toString(2).padStart(32,'0'); }
-function neededBitsForSubnets(n){ return Math.ceil(Math.log2(n)); }
-function neededBitsForHosts(n){ return Math.ceil(Math.log2(n+2)); }
-
-// κύρια λειτουργία
-function start(){
-  clearInterval(timer);
-
-  const ip=document.getElementById("ip").value;
-  const baseCidr=parseInt(document.getElementById("baseCidr").value);
-
-  const mode=document.querySelector("input[name=mode]:checked").value;
-
-  let borrowBits;
-  if(mode==="subnets"){
-    const count=parseInt(document.getElementById("subnetCount").value);
-    borrowBits=neededBitsForSubnets(count);
-  } else {
-    const hosts=parseInt(document.getElementById("hostCount").value);
-    borrowBits=(32-baseCidr)-neededBitsForHosts(hosts);
-  }
-
-  const newCidr=baseCidr+borrowBits;
-  const ipInt=ipToInt(ip);
-
-  document.getElementById("info").innerText=`Νέο CIDR: /${newCidr} | Borrowed bits: ${borrowBits}`;
-
-  createBinaryView(ipInt,baseCidr,borrowBits);
-  calculateSubnets(ipInt,newCidr);
+body{
+  font-family: Arial;
+  margin:20px;
+  background:#f2f2f2;
 }
 
-// binary view
-function createBinaryView(ipInt, baseCidr, borrowBits){
-  const bitsDiv=document.getElementById("bits");
-  bitsDiv.innerHTML="";
-  subnetBitsElements=[];
-
-  const bin=toBinary32(ipInt);
-
-  for(let i=0;i<32;i++){
-    const s=document.createElement("span");
-    s.innerText=bin[i];
-    s.classList.add("bit");
-    if(i<baseCidr) s.classList.add("network");
-    else if(i<baseCidr+borrowBits) {
-      s.classList.add("subnet");
-      subnetBitsElements.push(s);
-    } else s.classList.add("host");
-
-    bitsDiv.appendChild(s);
-  }
+h1{text-align:center; font-size:1.8em;}
+.controls{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:20px;
 }
 
-// υπολογισμός subnets
-function calculateSubnets(ipInt,cidr){
-  const tbody=document.querySelector("#table tbody");
-  tbody.innerHTML="";
-  subnetStates=[];
-
-  const hostBits=32-cidr;
-  const block=2**hostBits;
-  const count=2**(cidr - Math.floor(cidr/8)*8);
-
-  for(let i=0;i<count;i++){
-    const net=ipInt+i*block;
-    subnetStates.push(toBinary32(net));
-    const first=net+1;
-    const last=net+block-2;
-    const bc=net+block-1;
-
-    tbody.innerHTML+=`
-      <tr>
-        <td>${i}</td>
-        <td>${intToIp(net)}</td>
-        <td>${intToIp(first)}</td>
-        <td>${intToIp(last)}</td>
-        <td>${intToIp(bc)}</td>
-      </tr>`;
-  }
+.controls label{font-weight:bold;}
+.controls input[type="number"], input[type="text"]{
+  width:100%;
+  max-width:200px;
+  margin:5px 0;
+  padding:4px;
 }
 
-// animation (touch-friendly)
-function animate(){
-  if(!subnetStates.length) return;
-  let i=0;
-  clearInterval(timer);
-  timer=setInterval(()=>{
-    const state=subnetStates[i];
-    subnetBitsElements.forEach((el,idx)=>{
-      const pos=32-subnetBitsElements.length+idx;
-      el.innerText=state[pos];
-    });
-    i=(i+1)%subnetStates.length;
-  },800);
+button{
+  padding:8px 12px;
+  font-size:1em;
+  margin-right:8px;
+  border:none;
+  border-radius:5px;
+  background:#2196F3;
+  color:white;
 }
 
-// event listeners για mobile
-document.getElementById("startBtn").addEventListener("click",start);
-document.getElementById("animateBtn").addEventListener("click",animate);
+button:active{background:#1976D2;}
 
-// φορτώνει αυτόματα
-start();
+#bits{
+  font-family:monospace;
+  font-size:24px;
+  letter-spacing:4px;
+  margin:15px 0;
+  word-wrap: break-word;
+}
+
+.bit{
+  padding:4px;
+  border-radius:4px;
+}
+
+.network{background:#4CAF50; color:white;}
+.subnet{background:#FF9800; color:white;}
+.host{background:#ddd;}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  font-size:0.9em;
+}
+
+th,td{
+  border:1px solid #ccc;
+  padding:5px;
+  text-align:center;
+}
+
+th{background:#333; color:white;}
+
+@media screen and (max-width:600px){
+  #bits{font-size:18px; letter-spacing:2px;}
+  button{width:48%; margin-bottom:10px;}
+}
