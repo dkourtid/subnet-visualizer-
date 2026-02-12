@@ -1,86 +1,180 @@
-body{
-  font-family:Arial;
-  background:#f3f3f3;
-  padding:20px;
+let subnetStates=[];
+let subnetBitsElements=[];
+let timer=null;
+let currentIndex=0;
+let newCidr=0;
+let borrowedBits=0;
+
+/* ---------- utils ---------- */
+
+function ipToInt(ip){
+  return ip.split('.').reduce((a,b)=>(a<<8)+ +b,0);
 }
 
-h1{text-align:center}
-
-.controls{
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:20px;
+function intToIp(int){
+  return [(int>>>24)&255,(int>>>16)&255,(int>>>8)&255,int&255].join('.');
 }
 
-input{ padding:4px; margin:4px; }
-
-button{
-  padding:8px 12px;
-  border:none;
-  border-radius:6px;
-  background:#1976d2;
-  color:white;
-  cursor:pointer;
+function toBinary32(n){
+  return n.toString(2).padStart(32,'0');
 }
 
-button:active{ transform:scale(0.95); }
+/* ---------- start ---------- */
 
-#bits{
-  display:flex;
-  flex-wrap:wrap;
-  gap:4px;
-  font-family:monospace;
-  font-size:22px;
-  margin:15px 0;
+function start(){
+
+  clearInterval(timer);
+  currentIndex=0;
+
+  const ip=document.getElementById("ip").value;
+  const base=parseInt(document.getElementById("baseCidr").value);
+  const mode=document.querySelector("input[name=mode]:checked").value;
+
+  if(mode==="subnets"){
+    const count=parseInt(document.getElementById("subnetCount").value);
+    borrowedBits=Math.ceil(Math.log2(count));
+    newCidr=base+borrowedBits;
+  }else{
+    const hosts=parseInt(document.getElementById("hostCount").value);
+    const needed=Math.ceil(Math.log2(hosts+2));
+    newCidr=32-needed;
+    borrowedBits=newCidr-base;
+  }
+
+  document.getElementById("info").innerText=
+  `Νέο CIDR: /${newCidr} | Borrowed bits: ${borrowedBits}`;
+
+  buildBinary(ipToInt(ip),base);
+  generateSubnets(ipToInt(ip),base);
 }
 
-.bit{
-  width:20px;
-  text-align:center;
-  border-radius:4px;
-  padding:3px;
-  transition:all .25s;
+/* ---------- build binary ---------- */
+
+function buildBinary(ipInt,base){
+
+  const div=document.getElementById("bits");
+  div.innerHTML="";
+  subnetBitsElements=[];
+
+  const bin=toBinary32(ipInt);
+
+  for(let i=0;i<32;i++){
+
+    const span=document.createElement("span");
+    span.textContent=bin[i];
+    span.className="bit";
+
+    if(i<base) span.classList.add("network");
+    else if(i<base+borrowedBits){
+      span.classList.add("subnet");
+      subnetBitsElements.push(span);
+    }
+    else span.classList.add("host");
+
+    div.appendChild(span);
+
+    if((i+1)%8===0 && i!==31){
+      const dot=document.createElement("span");
+      dot.textContent=".";
+      dot.className="dot";
+      div.appendChild(dot);
+    }
+  }
 }
 
-.network{ background:#4caf50;color:white; }
-.subnet{ background:#ff9800;color:white; }
-.host{ background:#e0e0e0; }
+/* ---------- generate subnets ---------- */
 
-.dot{
-  font-weight:bold;
-  margin:0 6px;
+function generateSubnets(ipInt,base){
+
+  subnetStates=[];
+  const tbody=document.querySelector("#table tbody");
+  tbody.innerHTML="";
+
+  const hostBits=32-newCidr;
+  const block=2**hostBits;
+  const total=2**borrowedBits;
+
+  for(let i=0;i<total;i++){
+
+    const net=ipInt + i*block;
+    subnetStates.push(toBinary32(net));
+
+    tbody.innerHTML+=`
+    <tr>
+      <td>${i}</td>
+      <td>${intToIp(net)}</td>
+      <td>${intToIp(net+1)}</td>
+      <td>${intToIp(net+block-2)}</td>
+      <td>${intToIp(net+block-1)}</td>
+    </tr>`;
+  }
 }
 
-.legend span{
-  padding:6px 10px;
-  margin-right:10px;
-  border-radius:6px;
-  color:white;
-  font-size:14px;
+/* ---------- highlight ---------- */
+
+function highlightRow(index){
+
+  const rows=document.querySelectorAll("#table tbody tr");
+  rows.forEach(r=>r.classList.remove("activeRow"));
+
+  if(rows[index])
+    rows[index].classList.add("activeRow");
 }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:white;
+/* ---------- step ---------- */
+
+function stepSubnet(){
+
+  if(!subnetStates.length) return;
+
+  const state=subnetStates[currentIndex];
+  const base=parseInt(document.getElementById("baseCidr").value);
+
+  subnetBitsElements.forEach((el,idx)=>{
+
+    const pos=base+idx;
+
+    el.classList.add("flip");
+
+    setTimeout(()=>{
+      el.textContent=state[pos];
+      el.classList.remove("flip");
+    },150);
+
+  });
+
+  highlightRow(currentIndex);
+
+  currentIndex++;
+  if(currentIndex>=subnetStates.length)
+    currentIndex=0;
 }
 
-th,td{
-  border:1px solid #ccc;
-  padding:6px;
-  text-align:center;
+/* ---------- controls ---------- */
+
+function play(){
+  if(timer) return;
+  timer=setInterval(stepSubnet,900);
 }
 
-th{
-  background:#333;
-  color:white;
+function pause(){
+  clearInterval(timer);
+  timer=null;
 }
 
-.activeRow{
-  background:#ffeaa7 !important;
+function reset(){
+  pause();
+  currentIndex=0;
+  highlightRow(-1);
+  start();
 }
 
-.flip{
-  transform:scale(1.5);
-}
+/* ---------- events ---------- */
+
+document.getElementById("startBtn").addEventListener("click",start);
+document.getElementById("playBtn").addEventListener("click",play);
+document.getElementById("pauseBtn").addEventListener("click",pause);
+document.getElementById("nextBtn").addEventListener("click",stepSubnet);
+document.getElementById("resetBtn").addEventListener("click",reset);
+
+start();
