@@ -1,5 +1,5 @@
 body{
-  font-family: Arial;
+  font-family:Arial;
   background:#f3f3f3;
   padding:20px;
 }
@@ -13,10 +13,7 @@ h1{text-align:center}
   margin-bottom:20px;
 }
 
-input{
-  padding:4px;
-  margin:4px;
-}
+input{ padding:4px; margin:4px; }
 
 button{
   padding:8px 12px;
@@ -27,9 +24,7 @@ button{
   cursor:pointer;
 }
 
-button:active{
-  transform:scale(0.95);
-}
+button:active{ transform:scale(0.95); }
 
 #bits{
   display:flex;
@@ -48,9 +43,9 @@ button:active{
   transition:all .25s;
 }
 
-.network{background:#4caf50;color:white}
-.subnet{background:#ff9800;color:white}
-.host{background:#e0e0e0}
+.network{ background:#4caf50;color:white; }
+.subnet{ background:#ff9800;color:white; }
+.host{ background:#e0e0e0; }
 
 .dot{
   font-weight:bold;
@@ -80,4 +75,12 @@ th,td{
 th{
   background:#333;
   color:white;
+}
+
+.activeRow{
+  background:#ffeaa7 !important;
+}
+
+.flip{
+  transform:scale(1.5);
 }
