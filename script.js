@@ -7,16 +7,28 @@ let borrowedBits=0;
 
 /* ---------- utils ---------- */
 
+// ασφαλής μετατροπή decimal IP σε binary (ανά byte)
+function ipToBinary(ip){
+  return ip.split('.')
+    .map(octet => parseInt(octet).toString(2).padStart(8,'0'))
+    .join('');
+}
+
 function ipToInt(ip){
-  return ip.split('.').reduce((a,b)=>(a<<8)+ +b,0);
+  return ip.split('.').reduce((a,b)=>(a<<8)+ +b,0) >>>0;
 }
 
 function intToIp(int){
   return [(int>>>24)&255,(int>>>16)&255,(int>>>8)&255,int&255].join('.');
 }
 
-function toBinary32(n){
-  return n.toString(2).padStart(32,'0');
+function intToBinary(ipInt){
+  return [
+    (ipInt>>>24)&255,
+    (ipInt>>>16)&255,
+    (ipInt>>>8)&255,
+    ipInt&255
+  ].map(o=>o.toString(2).padStart(8,'0')).join('');
 }
 
 /* ---------- start ---------- */
@@ -44,19 +56,19 @@ function start(){
   document.getElementById("info").innerText=
   `Νέο CIDR: /${newCidr} | Borrowed bits: ${borrowedBits}`;
 
-  buildBinary(ipToInt(ip),base);
+  buildBinary(ip,base);
   generateSubnets(ipToInt(ip),base);
 }
 
 /* ---------- build binary ---------- */
 
-function buildBinary(ipInt,base){
+function buildBinary(ip,base){
 
   const div=document.getElementById("bits");
   div.innerHTML="";
   subnetBitsElements=[];
 
-  const bin=toBinary32(ipInt);
+  const bin=ipToBinary(ip);
 
   for(let i=0;i<32;i++){
 
@@ -97,7 +109,7 @@ function generateSubnets(ipInt,base){
   for(let i=0;i<total;i++){
 
     const net=ipInt + i*block;
-    subnetStates.push(toBinary32(net));
+    subnetStates.push(intToBinary(net));
 
     tbody.innerHTML+=`
     <tr>
@@ -113,15 +125,12 @@ function generateSubnets(ipInt,base){
 /* ---------- highlight ---------- */
 
 function highlightRow(index){
-
   const rows=document.querySelectorAll("#table tbody tr");
   rows.forEach(r=>r.classList.remove("activeRow"));
-
-  if(rows[index])
-    rows[index].classList.add("activeRow");
+  if(rows[index]) rows[index].classList.add("activeRow");
 }
 
-/* ---------- step ---------- */
+/* ---------- step animation (σωστό binary counter) ---------- */
 
 function stepSubnet(){
 
@@ -130,18 +139,23 @@ function stepSubnet(){
   const state=subnetStates[currentIndex];
   const base=parseInt(document.getElementById("baseCidr").value);
 
-  subnetBitsElements.forEach((el,idx)=>{
+  // LSB first (δεξιά → αριστερά)
+  for(let i=subnetBitsElements.length-1;i>=0;i--){
 
-    const pos=base+idx;
-
-    el.classList.add("flip");
+    const el=subnetBitsElements[i];
+    const pos=base+i;
 
     setTimeout(()=>{
-      el.textContent=state[pos];
-      el.classList.remove("flip");
-    },150);
 
-  });
+      el.classList.add("flip");
+      el.textContent=state[pos];
+
+      setTimeout(()=>{
+        el.classList.remove("flip");
+      },150);
+
+    }, (subnetBitsElements.length-1-i)*120);
+  }
 
   highlightRow(currentIndex);
 
