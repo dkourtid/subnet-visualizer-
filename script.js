@@ -1,9 +1,11 @@
 let subnetStates=[];
-let subnetBits=[];
+let subnetBitsElements=[];
 let timer=null;
-let playing=false;
+let currentIndex=0;
+let newCidr=0;
+let borrowedBits=0;
 
-/* ---------------- utils ---------------- */
+/* ---------- utils ---------- */
 
 function ipToInt(ip){
   return ip.split('.').reduce((a,b)=>(a<<8)+ +b,0);
@@ -17,64 +19,59 @@ function toBinary32(n){
   return n.toString(2).padStart(32,'0');
 }
 
-function bitsForSubnets(n){ return Math.ceil(Math.log2(n)); }
-function bitsForHosts(n){ return Math.ceil(Math.log2(n+2)); }
-
-/* ---------------- start ---------------- */
+/* ---------- start ---------- */
 
 function start(){
 
-  stopAnimation();
+  clearInterval(timer);
+  currentIndex=0;
 
   const ip=document.getElementById("ip").value;
   const base=parseInt(document.getElementById("baseCidr").value);
   const mode=document.querySelector("input[name=mode]:checked").value;
 
-  let borrow;
-
   if(mode==="subnets"){
-    borrow=bitsForSubnets(parseInt(document.getElementById("subnetCount").value));
+    const count=parseInt(document.getElementById("subnetCount").value);
+    borrowedBits=Math.ceil(Math.log2(count));
+    newCidr=base+borrowedBits;
   }else{
-    borrow=(32-base)-bitsForHosts(parseInt(document.getElementById("hostCount").value));
+    const hosts=parseInt(document.getElementById("hostCount").value);
+    const needed=Math.ceil(Math.log2(hosts+2));
+    newCidr=32-needed;
+    borrowedBits=newCidr-base;
   }
 
-  const cidr=base+borrow;
-  const ipInt=ipToInt(ip);
+  document.getElementById("info").innerText=
+  `Νέο CIDR: /${newCidr} | Borrowed bits: ${borrowedBits}`;
 
-  document.getElementById("info").innerText=`Νέο CIDR: /${cidr} | Borrowed bits: ${borrow}`;
-
-  buildBinaryAnimated(ipInt,base,borrow);
-  calculateSubnets(ipInt,cidr);
+  buildBinary(ipToInt(ip),base);
+  generateSubnets(ipToInt(ip),base);
 }
 
-/* ---------------- animated build ---------------- */
+/* ---------- build binary ---------- */
 
-function buildBinaryAnimated(ipInt,base,borrow){
+function buildBinary(ipInt,base){
 
   const div=document.getElementById("bits");
   div.innerHTML="";
-  subnetBits=[];
+  subnetBitsElements=[];
 
   const bin=toBinary32(ipInt);
 
-  let i=0;
+  for(let i=0;i<32;i++){
 
-  const interval=setInterval(()=>{
+    const span=document.createElement("span");
+    span.textContent=bin[i];
+    span.className="bit";
 
-    if(i>=32){ clearInterval(interval); return; }
-
-    const s=document.createElement("span");
-    s.textContent=bin[i];
-    s.className="bit";
-
-    if(i<base) s.classList.add("network");
-    else if(i<base+borrow){
-      s.classList.add("subnet");
-      subnetBits.push(s);
+    if(i<base) span.classList.add("network");
+    else if(i<base+borrowedBits){
+      span.classList.add("subnet");
+      subnetBitsElements.push(span);
     }
-    else s.classList.add("host");
+    else span.classList.add("host");
 
-    div.appendChild(s);
+    div.appendChild(span);
 
     if((i+1)%8===0 && i!==31){
       const dot=document.createElement("span");
@@ -82,98 +79,102 @@ function buildBinaryAnimated(ipInt,base,borrow){
       dot.className="dot";
       div.appendChild(dot);
     }
-
-    i++;
-
-  },40); // speed build
+  }
 }
 
-/* ---------------- subnets calc ---------------- */
+/* ---------- generate subnets ---------- */
 
-function calculateSubnets(ipInt,cidr){
+function generateSubnets(ipInt,base){
 
   subnetStates=[];
-
   const tbody=document.querySelector("#table tbody");
   tbody.innerHTML="";
 
-  const hostBits=32-cidr;
+  const hostBits=32-newCidr;
   const block=2**hostBits;
+  const total=2**borrowedBits;
 
-  let index=0;
+  for(let i=0;i<total;i++){
 
-  for(let net=ipInt; net<ipInt+block*(2**(cidr-ipToCidrBase(ipInt))); net+=block){
-
+    const net=ipInt + i*block;
     subnetStates.push(toBinary32(net));
-
-    const first=net+1;
-    const last=net+block-2;
-    const bc=net+block-1;
 
     tbody.innerHTML+=`
     <tr>
-      <td>${index}</td>
+      <td>${i}</td>
       <td>${intToIp(net)}</td>
-      <td>${intToIp(first)}</td>
-      <td>${intToIp(last)}</td>
-      <td>${intToIp(bc)}</td>
+      <td>${intToIp(net+1)}</td>
+      <td>${intToIp(net+block-2)}</td>
+      <td>${intToIp(net+block-1)}</td>
     </tr>`;
-
-    index++;
   }
 }
 
-function ipToCidrBase(){ return 24 } // απλό για classroom use
+/* ---------- highlight ---------- */
 
-/* ---------------- animation ---------------- */
+function highlightRow(index){
 
-function animate(){
+  const rows=document.querySelectorAll("#table tbody tr");
+  rows.forEach(r=>r.classList.remove("activeRow"));
+
+  if(rows[index])
+    rows[index].classList.add("activeRow");
+}
+
+/* ---------- step ---------- */
+
+function stepSubnet(){
 
   if(!subnetStates.length) return;
 
-  playing=!playing;
+  const state=subnetStates[currentIndex];
+  const base=parseInt(document.getElementById("baseCidr").value);
 
-  document.getElementById("animateBtn").innerText =
-    playing ? "⏸ Pause" : "▶ Play Animation";
+  subnetBitsElements.forEach((el,idx)=>{
 
-  if(!playing){
-    clearInterval(timer);
-    return;
-  }
+    const pos=base+idx;
 
-  let i=0;
+    el.classList.add("flip");
 
-  timer=setInterval(()=>{
+    setTimeout(()=>{
+      el.textContent=state[pos];
+      el.classList.remove("flip");
+    },150);
 
-    const state=subnetStates[i];
+  });
 
-    subnetBits.forEach((el,idx)=>{
+  highlightRow(currentIndex);
 
-      const pos=32-subnetBits.length+idx;
-
-      el.style.transform="scale(1.4)";
-
-      setTimeout(()=>{
-        el.textContent=state[pos];
-        el.style.transform="scale(1)";
-      },120);
-
-    });
-
-    i=(i+1)%subnetStates.length;
-
-  },900);
+  currentIndex++;
+  if(currentIndex>=subnetStates.length)
+    currentIndex=0;
 }
 
-function stopAnimation(){
+/* ---------- controls ---------- */
+
+function play(){
+  if(timer) return;
+  timer=setInterval(stepSubnet,900);
+}
+
+function pause(){
   clearInterval(timer);
-  playing=false;
-  document.getElementById("animateBtn").innerText="▶ Play Animation";
+  timer=null;
 }
 
-/* ---------------- events ---------------- */
+function reset(){
+  pause();
+  currentIndex=0;
+  highlightRow(-1);
+  start();
+}
+
+/* ---------- events ---------- */
 
 document.getElementById("startBtn").addEventListener("click",start);
-document.getElementById("animateBtn").addEventListener("click",animate);
+document.getElementById("playBtn").addEventListener("click",play);
+document.getElementById("pauseBtn").addEventListener("click",pause);
+document.getElementById("nextBtn").addEventListener("click",stepSubnet);
+document.getElementById("resetBtn").addEventListener("click",reset);
 
 start();
