@@ -1,241 +1,441 @@
 
-* {
-  box-sizing: border-box;
+let subnetStates = [];
+let subnetDetails = [];
+let bitElements = [];
+let subnetBitsElements = [];
+
+let timer = null;
+let currentIndex = -1;
+let borrowedBits = 0;
+let newCidr = 0;
+let animationToken = 0;
+
+const ANIMATION_SPEED = 3500;
+
+/* ---------------- IP UTILITIES ---------------- */
+
+function ipToInt(ip) {
+  return ip.split(".")
+    .reduce((a, b) => a * 256 + Number(b), 0);
 }
 
-body {
-  font-family: Arial, sans-serif;
-  background: #f3f3f3;
-  padding: 20px;
-  margin: 0;
+function intToIp(num) {
+  return [
+    Math.floor(num / 16777216) % 256,
+    Math.floor(num / 65536) % 256,
+    Math.floor(num / 256) % 256,
+    num % 256
+  ].join(".");
 }
 
-h1 {
-  text-align: center;
+function intToBinary(num) {
+  return [
+    Math.floor(num / 16777216) % 256,
+    Math.floor(num / 65536) % 256,
+    Math.floor(num / 256) % 256,
+    num % 256
+  ].map(x => x.toString(2).padStart(8, "0")).join("");
 }
 
-.controls {
-  background: white;
-  padding: 18px;
-  border-radius: 10px;
-  margin-bottom: 20px;
+function ipToBinary(ip) {
+  return ip.split(".")
+    .map(x => Number(x).toString(2).padStart(8, "0"))
+    .join("");
 }
 
-input {
-  padding: 7px;
-  margin: 5px;
-  max-width: 150px;
+/* ---------------- VALIDATION ---------------- */
+
+function validIP(ip) {
+  const parts = ip.split(".");
+
+  return parts.length === 4 &&
+    parts.every(x =>
+      /^\d+$/.test(x) &&
+      Number(x) >= 0 &&
+      Number(x) <= 255
+    );
 }
 
-button {
-  padding: 10px 14px;
-  margin: 4px;
-  border: none;
-  border-radius: 6px;
-  background: #1976d2;
-  color: white;
-  cursor: pointer;
-  font-weight: bold;
+/* ---------------- STOP ANIMATION ---------------- */
+
+function stopAnimation() {
+  clearInterval(timer);
+  timer = null;
+
+  document.getElementById("playBtn").innerText = "▶ Play";
 }
 
-button:hover {
-  background: #125ca5;
-}
+/* ---------------- START ---------------- */
 
-button:active {
-  transform: scale(0.95);
-}
+function start() {
 
-#bits {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  font-family: monospace;
-  font-size: 22px;
-  margin: 15px 0;
-  align-items: center;
-}
+  stopAnimation();
+  animationToken++;
 
-.bit {
-  width: 20px;
-  text-align: center;
-  border-radius: 4px;
-  padding: 3px 0;
-  transition: transform 0.25s;
-}
+  const ip = document.getElementById("ip").value.trim();
+  const base = Number(document.getElementById("baseCidr").value);
 
-.network {
-  background: #4caf50;
-  color: white;
-}
+  const mode = document.querySelector(
+    'input[name="mode"]:checked'
+  ).value;
 
-.subnet {
-  background: #ff9800;
-  color: white;
-}
-
-.host {
-  background: #e0e0e0;
-  color: #333;
-}
-
-.dot {
-  font-weight: bold;
-  margin: 0 5px;
-  color: #222;
-}
-
-.legend {
-  margin-bottom: 25px;
-}
-
-.legend span {
-  display: inline-block;
-  padding: 6px 10px;
-  margin-right: 8px;
-  border-radius: 6px;
-  color: white;
-  font-size: 14px;
-}
-
-.flip {
-  transform: scale(1.5);
-  box-shadow: 0 0 8px #ff9800;
-}
-
-/* SUBNET DETAILS */
-
-.subnet-details {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  margin: 20px 0;
-  box-shadow: 0 2px 8px #00000012;
-}
-
-.subnet-details h2 {
-  text-align: center;
-}
-
-.counter-box {
-  background: #263238;
-  color: white;
-  padding: 15px;
-  border-radius: 8px;
-  text-align: center;
-  margin-bottom: 15px;
-  font-size: 18px;
-}
-
-#subnetCounter {
-  color: #ffca28;
-  font-family: monospace;
-  font-size: 28px;
-  margin: 0 12px;
-}
-
-#subnetProgress {
-  display: block;
-  font-size: 13px;
-  margin-top: 6px;
-  color: #ddd;
-}
-
-.address-box {
-  padding: 18px;
-  border-radius: 9px;
-  margin: 12px 0;
-  text-align: center;
-  transition: all 0.3s;
-}
-
-.address-box h3 {
-  margin-top: 0;
-  font-size: 16px;
-}
-
-.address-box div {
-  font-family: monospace;
-  font-size: 24px;
-  font-weight: bold;
-  overflow-wrap: anywhere;
-}
-
-.network-address {
-  background: #e8f5e9;
-  border-left: 6px solid #4caf50;
-  color: #1b5e20;
-}
-
-.broadcast-address {
-  background: #ffebee;
-  border-left: 6px solid #e53935;
-  color: #b71c1c;
-}
-
-/* TABLE */
-
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  min-width: 650px;
-}
-
-th, td {
-  border: 1px solid #ccc;
-  padding: 9px;
-  text-align: center;
-}
-
-th {
-  background: #333;
-  color: white;
-}
-
-.activeRow {
-  background: #ffe082 !important;
-  font-weight: bold;
-  outline: 2px solid #ff9800;
-}
-
-/* MOBILE */
-
-@media(max-width:600px) {
-
-  body {
-    padding: 10px;
+  if (!validIP(ip)) {
+    alert("Μη έγκυρη IP διεύθυνση!");
+    return;
   }
 
-  h1 {
-    font-size: 23px;
+  if (!Number.isInteger(base) || base < 0 || base > 30) {
+    alert("Το CIDR πρέπει να είναι από 0 έως 30.");
+    return;
   }
 
-  .controls {
-    padding: 12px;
+  let count;
+
+  if (mode === "subnets") {
+
+    const requested = Number(
+      document.getElementById("subnetCount").value
+    );
+
+    if (!Number.isInteger(requested) || requested < 1) {
+      alert("Βάλε έγκυρο αριθμό υποδικτύων.");
+      return;
+    }
+
+    borrowedBits = Math.ceil(Math.log2(requested));
+
+    newCidr = base + borrowedBits;
+
+  } else {
+
+    const hosts = Number(
+      document.getElementById("hostCount").value
+    );
+
+    if (!Number.isInteger(hosts) || hosts < 1) {
+      alert("Βάλε έγκυρο αριθμό υπολογιστών.");
+      return;
+    }
+
+    const neededBits = Math.max(
+      2,
+      Math.ceil(Math.log2(hosts + 2))
+    );
+
+    newCidr = 32 - neededBits;
+
+    borrowedBits = newCidr - base;
   }
 
-  button {
-    width: 100%;
-    margin: 5px 0;
+  if (newCidr < base || newCidr > 30) {
+    alert("Δεν επαρκεί το αρχικό δίκτυο για αυτή την επιλογή.");
+    return;
   }
 
-  #bits {
-    gap: 2px;
-    font-size: 18px;
+  count = 2 ** borrowedBits;
+
+  if (count > 512) {
+    alert("Για λόγους εμφάνισης, επίλεξε έως 512 υποδίκτυα.");
+    return;
   }
 
-  .bit {
-    width: 17px;
-  }
+  const ipInt = ipToInt(ip);
 
-  .address-box div {
-    font-size: 19px;
-  }
+  const baseBlock = 2 ** (32 - base);
 
+  // Εύρεση του πραγματικού αρχικού network address
+  const networkStart =
+    Math.floor(ipInt / baseBlock) * baseBlock;
+
+  document.getElementById("info").innerText =
+    `Νέο CIDR: /${newCidr} | Borrowed bits: ${borrowedBits} | Σύνολο υποδικτύων: ${count}`;
+
+  currentIndex = -1;
+
+  buildBinary(networkStart, base);
+
+  generateSubnets(networkStart);
+
+  // Εμφάνιση πρώτου υποδικτύου
+  showSubnet(0);
 }
+
+/* ---------------- BINARY VIEW ---------------- */
+
+function buildBinary(ipInt, base) {
+
+  const div = document.getElementById("bits");
+
+  div.innerHTML = "";
+
+  bitElements = [];
+  subnetBitsElements = [];
+
+  const bin = intToBinary(ipInt);
+
+  for (let i = 0; i < 32; i++) {
+
+    const span = document.createElement("span");
+
+    span.textContent = bin[i];
+    span.className = "bit";
+
+    if (i < base) {
+
+      span.classList.add("network");
+
+    } else if (i < base + borrowedBits) {
+
+      span.classList.add("subnet");
+
+      subnetBitsElements.push(span);
+
+    } else {
+
+      span.classList.add("host");
+
+    }
+
+    bitElements.push(span);
+
+    div.appendChild(span);
+
+    // Διαχωρισμός bytes
+    if ((i + 1) % 8 === 0 && i !== 31) {
+
+      const dot = document.createElement("span");
+
+      dot.textContent = ".";
+      dot.className = "dot";
+
+      div.appendChild(dot);
+    }
+  }
+}
+
+/* ---------------- GENERATE SUBNETS ---------------- */
+
+function generateSubnets(networkStart) {
+
+  subnetStates = [];
+  subnetDetails = [];
+
+  const tbody = document.querySelector("#table tbody");
+
+  tbody.innerHTML = "";
+
+  const hostBits = 32 - newCidr;
+
+  const block = 2 ** hostBits;
+
+  const total = 2 ** borrowedBits;
+
+  for (let i = 0; i < total; i++) {
+
+    const net = networkStart + i * block;
+
+    const broadcast = net + block - 1;
+
+    const first = net + 1;
+
+    const last = broadcast - 1;
+
+    const binary = intToBinary(net);
+
+    subnetStates.push(binary);
+
+    subnetDetails.push({
+      index: i,
+      network: intToIp(net),
+      first: intToIp(first),
+      last: intToIp(last),
+      broadcast: intToIp(broadcast),
+      counter: i.toString(2).padStart(borrowedBits, "0")
+    });
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${i}</td>
+      <td>${intToIp(net)}</td>
+      <td>${intToIp(first)}</td>
+      <td>${intToIp(last)}</td>
+      <td>${intToIp(broadcast)}</td>
+    `;
+
+    tbody.appendChild(row);
+  }
+}
+
+/* ---------------- HIGHLIGHT ROW ---------------- */
+
+function highlightRow(index) {
+
+  const rows = document.querySelectorAll(
+    "#table tbody tr"
+  );
+
+  rows.forEach(row => {
+    row.classList.remove("activeRow");
+  });
+
+  if (rows[index]) {
+    rows[index].classList.add("activeRow");
+
+    rows[index].scrollIntoView({
+      behavior: "smooth",
+      block: "nearest"
+    });
+  }
+}
+
+/* ---------------- SHOW SUBNET ---------------- */
+
+function showSubnet(index) {
+
+  if (!subnetStates.length) return;
+
+  animationToken++;
+
+  const token = animationToken;
+
+  currentIndex = index;
+
+  const state = subnetStates[index];
+
+  const details = subnetDetails[index];
+
+  const base = Number(
+    document.getElementById("baseCidr").value
+  );
+
+  // Ενημέρωση όλων των bits.
+  // Τα subnet bits θα αλλάζουν σταδιακά.
+
+  bitElements.forEach((el, i) => {
+
+    if (i < base || i >= base + borrowedBits) {
+      el.textContent = state[i];
+    }
+
+  });
+
+  // Animated subnet counter: δεξιά προς αριστερά
+
+  let delay = 0;
+
+  for (let i = subnetBitsElements.length - 1; i >= 0; i--) {
+
+    const el = subnetBitsElements[i];
+
+    const pos = base + i;
+
+    setTimeout(() => {
+
+      if (token !== animationToken) return;
+
+      el.classList.add("flip");
+
+      el.textContent = state[pos];
+
+      setTimeout(() => {
+
+        if (token !== animationToken) return;
+
+        el.classList.remove("flip");
+
+      }, 250);
+
+    }, delay);
+
+    delay += 100;
+  }
+
+  // Highlight table
+  highlightRow(index);
+
+  // Subnet information
+
+  document.getElementById("subnetTitle").innerText =
+    `Υποδίκτυο ${index + 1}`;
+
+  document.getElementById("subnetCounter").innerText =
+    details.counter || "0";
+
+  document.getElementById("subnetProgress").innerText =
+    `${index + 1} από ${subnetStates.length} υποδίκτυα`;
+
+  // Network address
+
+  document.getElementById("networkAddress").innerText =
+    details.network;
+
+  // Broadcast address
+
+  document.getElementById("broadcastAddress").innerText =
+    details.broadcast;
+}
+
+/* ---------------- NEXT SUBNET ---------------- */
+
+function nextSubnet() {
+
+  if (!subnetStates.length) return;
+
+  const next = (currentIndex + 1) % subnetStates.length;
+
+  showSubnet(next);
+}
+
+/* ---------------- PLAY ---------------- */
+
+function play() {
+
+  if (!subnetStates.length || timer) return;
+
+  document.getElementById("playBtn").innerText = "▶ Playing...";
+
+  timer = setInterval(() => {
+
+    nextSubnet();
+
+  }, ANIMATION_SPEED);
+}
+
+/* ---------------- PAUSE ---------------- */
+
+function pause() {
+
+  stopAnimation();
+}
+
+/* ---------------- RESET ---------------- */
+
+function reset() {
+
+  stopAnimation();
+
+  if (!subnetStates.length) return;
+
+  showSubnet(0);
+}
+
+/* ---------------- EVENTS ---------------- */
+
+document.getElementById("startBtn")
+  .addEventListener("click", start);
+
+document.getElementById("playBtn")
+  .addEventListener("click", play);
+
+document.getElementById("nextBtn")
+  .addEventListener("click", nextSubnet);
+
+document.getElementById("pauseBtn")
+  .addEventListener("click", pause);
+
+document.getElementById("resetBtn")
+  .addEventListener("click", reset);
+
+// Αρχική εκτέλεση
+start();
