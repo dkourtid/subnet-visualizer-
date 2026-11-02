@@ -9,96 +9,132 @@
 </head>
 <body>
 
-<h1>🌐 Subnetting Visualizer</h1>
+<header class="main-header">
+  <h1>🌐 Subnetting Visualizer</h1>
+</header>
 
-<div class="controls">
+<!-- CONTROLS -->
 
-  <label>IP Address</label>
-  <input id="ip" value="192.168.1.0">
+<section class="controls">
 
-  <label>Base CIDR</label>
-  <input id="baseCidr" type="number" value="24" min="0" max="30">
-
-  <h3>Mode</h3>
-
-  <label>
-    <input type="radio" name="mode" value="subnets" checked>
-    Υποδίκτυα
-  </label>
-
-  <input id="subnetCount" type="number" value="4" min="1">
-
-  <br><br>
-
-  <label>
-    <input type="radio" name="mode" value="hosts">
-    Hosts / subnet
-  </label>
-
-  <input id="hostCount" type="number" value="50" min="1">
-
-  <br><br>
-
-  <button id="startBtn">Υπολογισμός</button>
-  <button id="playBtn">▶ Play</button>
-  <button id="nextBtn">Next Subnet</button>
-  <button id="pauseBtn">⏸ Pause</button>
-  <button id="resetBtn">↺ Reset</button>
-
-</div>
-
-<h2 id="info"></h2>
-
-<h2>Binary View</h2>
-
-<div id="bits"></div>
-
-<div class="legend">
-  <span class="network">Network</span>
-  <span class="subnet">Subnet</span>
-  <span class="host">Host</span>
-</div>
-
-<!-- CURRENT SUBNET DETAILS -->
-
-<div id="subnetDetails" class="subnet-details">
-
-  <h2 id="subnetTitle">Υποδίκτυο</h2>
-
-  <div class="counter-box">
-    Binary Counter:
-    <strong id="subnetCounter">00</strong>
-    <span id="subnetProgress"></span>
+  <div class="input-group">
+    <label for="ip">IP Address</label>
+    <input id="ip" value="192.168.1.0">
   </div>
 
-  <div class="address-box network-address">
-    <h3>🌐 Network Address</h3>
-    <div id="networkAddress">-</div>
+  <div class="input-group">
+    <label for="baseCidr">Base CIDR</label>
+    <input id="baseCidr" type="number" value="24" min="0" max="30">
   </div>
 
-  <div class="address-box broadcast-address">
-    <h3>📡 Broadcast Address</h3>
-    <div id="broadcastAddress">-</div>
+  <div class="mode-section">
+
+    <h3>Mode</h3>
+
+    <div class="mode-row">
+      <label>
+        <input type="radio" name="mode" value="subnets" checked>
+        Υποδίκτυα
+      </label>
+
+      <input id="subnetCount" type="number" value="4" min="1">
+    </div>
+
+    <div class="mode-row">
+      <label>
+        <input type="radio" name="mode" value="hosts">
+        Hosts / subnet
+      </label>
+
+      <input id="hostCount" type="number" value="50" min="1">
+    </div>
+
   </div>
 
-</div>
+  <div class="buttons">
+    <button id="startBtn">Υπολογισμός</button>
+    <button id="playBtn">▶ Play</button>
+    <button id="nextBtn">Next Subnet</button>
+    <button id="pauseBtn">⏸ Pause</button>
+    <button id="resetBtn">↺ Reset</button>
+  </div>
 
-<h2>Subnets Table</h2>
+</section>
 
-<div class="table-container">
-<table id="table">
-<thead>
-<tr>
-<th>#</th>
-<th>Network</th>
-<th>First Host</th>
-<th>Last Host</th>
-<th>Broadcast</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-</div>
+<!-- CIDR INFORMATION -->
+
+<section class="info-section">
+  <h2 id="info"></h2>
+</section>
+
+<!-- SUBNETS TABLE - MOVED UP -->
+
+<section class="table-section">
+
+  <h2>Subnets Table</h2>
+
+  <div class="table-container">
+    <table id="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Network</th>
+          <th>First Host</th>
+          <th>Last Host</th>
+          <th>Broadcast</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+</section>
+
+<!-- MAIN VISUALIZATION AREA -->
+
+<section class="visualization-layout">
+
+  <!-- LEFT: BINARY VIEW -->
+
+  <div class="binary-panel">
+
+    <h2>Binary View</h2>
+
+    <div id="bits"></div>
+
+    <div class="legend">
+      <span class="network">Network</span>
+      <span class="subnet">Subnet</span>
+      <span class="host">Host</span>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: CURRENT SUBNET DETAILS -->
+
+  <div id="subnetDetails" class="subnet-details">
+
+    <h2 id="subnetTitle">Υποδίκτυο</h2>
+
+    <div class="counter-box">
+      Binary Counter:
+      <strong id="subnetCounter">00</strong>
+      <span id="subnetProgress"></span>
+    </div>
+
+    <div class="address-box network-address">
+      <h3>🌐 Network Address</h3>
+      <div id="networkAddress">-</div>
+    </div>
+
+    <div class="address-box broadcast-address">
+      <h3>📡 Broadcast Address</h3>
+      <div id="broadcastAddress">-</div>
+    </div>
+
+  </div>
+
+</section>
 
 <script src="script.js"></script>
 
