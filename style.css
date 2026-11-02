@@ -1,41 +1,117 @@
 
+/* =====================================
+   GENERAL
+===================================== */
+
 * {
   box-sizing: border-box;
 }
 
 body {
   font-family: Arial, sans-serif;
-  background: #f3f3f3;
-  padding: 20px;
+  background: #eef1f5;
+  padding: 22px;
   margin: 0;
+  color: #202a35;
 }
 
 h1 {
   text-align: center;
+  font-size: 34px;
+  margin: 5px 0 22px;
 }
+
+h2 {
+  font-size: 25px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+
+/* =====================================
+   CONTROLS
+===================================== */
 
 .controls {
   background: white;
-  padding: 18px;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  box-shadow: 0 3px 12px #00000012;
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-group label {
+  font-weight: bold;
 }
 
 input {
-  padding: 7px;
-  margin: 5px;
-  max-width: 150px;
+  padding: 9px;
+  margin: 3px;
+  max-width: 170px;
+  font-size: 16px;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+}
+
+.mode-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 15px;
+  border-left: 2px solid #e0e0e0;
+}
+
+.mode-section h3 {
+  margin: 0 0 3px;
+}
+
+.mode-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mode-row label {
+  white-space: nowrap;
+}
+
+.mode-row input[type="number"] {
+  width: 90px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
 }
 
 button {
-  padding: 10px 14px;
-  margin: 4px;
+  padding: 12px 17px;
+  margin: 3px;
   border: none;
-  border-radius: 6px;
+  border-radius: 7px;
   background: #1976d2;
   color: white;
   cursor: pointer;
+  font-size: 15px;
   font-weight: bold;
+  transition: background 0.2s, transform 0.2s;
 }
 
 button:hover {
@@ -46,134 +122,40 @@ button:active {
   transform: scale(0.95);
 }
 
-#bits {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  font-family: monospace;
-  font-size: 22px;
-  margin: 15px 0;
-  align-items: center;
-}
 
-.bit {
-  width: 20px;
-  text-align: center;
-  border-radius: 4px;
-  padding: 3px 0;
-  transition: transform 0.25s;
-}
+/* =====================================
+   CIDR INFORMATION
+===================================== */
 
-.network {
-  background: #4caf50;
-  color: white;
-}
-
-.subnet {
-  background: #ff9800;
-  color: white;
-}
-
-.host {
-  background: #e0e0e0;
-  color: #333;
-}
-
-.dot {
-  font-weight: bold;
-  margin: 0 5px;
-  color: #222;
-}
-
-.legend {
-  margin-bottom: 25px;
-}
-
-.legend span {
-  display: inline-block;
-  padding: 6px 10px;
-  margin-right: 8px;
-  border-radius: 6px;
-  color: white;
-  font-size: 14px;
-}
-
-.flip {
-  transform: scale(1.5);
-  box-shadow: 0 0 8px #ff9800;
-}
-
-/* SUBNET DETAILS */
-
-.subnet-details {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  margin: 20px 0;
-  box-shadow: 0 2px 8px #00000012;
-}
-
-.subnet-details h2 {
-  text-align: center;
-}
-
-.counter-box {
-  background: #263238;
-  color: white;
-  padding: 15px;
-  border-radius: 8px;
-  text-align: center;
+.info-section {
+  background: #ffffff;
+  padding: 5px 16px;
+  border-radius: 10px;
   margin-bottom: 15px;
-  font-size: 18px;
 }
 
-#subnetCounter {
-  color: #ffca28;
-  font-family: monospace;
-  font-size: 28px;
-  margin: 0 12px;
-}
-
-#subnetProgress {
-  display: block;
-  font-size: 13px;
-  margin-top: 6px;
-  color: #ddd;
-}
-
-.address-box {
-  padding: 18px;
-  border-radius: 9px;
+#info {
+  font-size: 23px;
+  color: #263238;
   margin: 12px 0;
-  text-align: center;
-  transition: all 0.3s;
 }
 
-.address-box h3 {
+
+/* =====================================
+   SUBNETS TABLE - TOP POSITION
+===================================== */
+
+.table-section {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  box-shadow: 0 3px 12px #00000012;
+}
+
+.table-section h2 {
   margin-top: 0;
-  font-size: 16px;
 }
-
-.address-box div {
-  font-family: monospace;
-  font-size: 24px;
-  font-weight: bold;
-  overflow-wrap: anywhere;
-}
-
-.network-address {
-  background: #e8f5e9;
-  border-left: 6px solid #4caf50;
-  color: #1b5e20;
-}
-
-.broadcast-address {
-  background: #ffebee;
-  border-left: 6px solid #e53935;
-  color: #b71c1c;
-}
-
-/* TABLE */
 
 .table-container {
   width: 100%;
@@ -189,13 +171,16 @@ table {
 
 th, td {
   border: 1px solid #ccc;
-  padding: 9px;
+  padding: 12px 10px;
   text-align: center;
+  font-size: 16px;
 }
 
 th {
-  background: #333;
+  background: #263238;
   color: white;
+  font-size: 16px;
+  padding: 14px 10px;
 }
 
 .activeRow {
@@ -204,38 +189,314 @@ th {
   outline: 2px solid #ff9800;
 }
 
-/* MOBILE */
 
-@media(max-width:600px) {
+/* =====================================
+   MAIN VISUALIZATION LAYOUT
+===================================== */
+
+.visualization-layout {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 3fr)
+    minmax(320px, 2fr);
+
+  gap: 20px;
+
+  align-items: stretch;
+}
+
+
+/* =====================================
+   BINARY PANEL - LEFT
+===================================== */
+
+.binary-panel {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px #00000012;
+
+  min-width: 0;
+}
+
+.binary-panel h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+/* Δύο ξεχωριστές σειρές:
+   Network και Broadcast */
+
+#bits {
+  display: block;
+  width: 100%;
+  margin: 15px 0;
+  font-family: monospace;
+  font-size: 23px;
+}
+
+/* Οι εσωτερικές σειρές bits */
+
+#bits > div {
+  margin-bottom: 22px !important;
+}
+
+#bits strong {
+  font-family: Arial, sans-serif;
+  font-size: 19px;
+  margin-bottom: 9px !important;
+}
+
+/* Κάθε bit */
+
+.bit {
+  display: inline-block;
+  width: 24px;
+  text-align: center;
+  border-radius: 4px;
+  padding: 5px 0;
+  font-weight: bold;
+  transition: transform 0.25s;
+}
+
+/* Network bits */
+
+.network {
+  background: #4caf50;
+  color: white;
+}
+
+/* Subnet bits */
+
+.subnet {
+  background: #ff9800;
+  color: white;
+}
+
+/* Host bits */
+
+.host {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.dot {
+  font-weight: bold;
+  margin: 0 5px;
+  color: #222;
+}
+
+/* Legend */
+
+.legend {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.legend span {
+  display: inline-block;
+  padding: 8px 13px;
+  border-radius: 6px;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.flip {
+  transform: scale(1.5);
+  box-shadow: 0 0 8px #ff9800;
+  z-index: 2;
+}
+
+
+/* =====================================
+   SUBNET DETAILS - RIGHT
+===================================== */
+
+.subnet-details {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 0;
+  box-shadow: 0 3px 12px #00000012;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 15px;
+
+  min-width: 0;
+}
+
+.subnet-details h2 {
+  text-align: center;
+  font-size: 28px;
+  margin: 0 0 5px;
+}
+
+/* Counter */
+
+.counter-box {
+  background: #263238;
+  color: white;
+  padding: 22px 12px;
+  border-radius: 9px;
+  text-align: center;
+  font-size: 19px;
+  font-weight: bold;
+}
+
+#subnetCounter {
+  color: #ffca28;
+  font-family: monospace;
+  font-size: 34px;
+  margin: 0 10px;
+}
+
+#subnetProgress {
+  display: block;
+  font-size: 15px;
+  margin-top: 8px;
+  color: #ddd;
+}
+
+/* Network and Broadcast cards */
+
+.address-box {
+  padding: 22px 12px;
+  border-radius: 10px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.address-box h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.address-box div {
+  font-family: monospace;
+  font-size: 27px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.network-address {
+  background: #e8f5e9;
+  border-left: 7px solid #4caf50;
+  color: #1b5e20;
+}
+
+.broadcast-address {
+  background: #ffebee;
+  border-left: 7px solid #e53935;
+  color: #b71c1c;
+}
+
+
+/* =====================================
+   RESPONSIVE LAYOUT
+===================================== */
+
+@media (max-width: 1000px) {
+
+  .visualization-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .subnet-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .subnet-details h2,
+  .counter-box {
+    grid-column: 1 / -1;
+  }
+
+}
+
+@media (max-width: 650px) {
 
   body {
     padding: 10px;
   }
 
   h1 {
-    font-size: 23px;
+    font-size: 25px;
+  }
+
+  h2 {
+    font-size: 21px;
   }
 
   .controls {
     padding: 12px;
+    display: block;
+  }
+
+  .input-group {
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .mode-section {
+    border-left: none;
+    padding-left: 0;
+    margin: 15px 0;
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
   }
 
   button {
     width: 100%;
-    margin: 5px 0;
+    margin: 4px 0;
   }
 
-  #bits {
-    gap: 2px;
+  #info {
     font-size: 18px;
   }
 
+  .visualization-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .binary-panel {
+    padding: 12px;
+    overflow-x: auto;
+  }
+
+  #bits {
+    font-size: 17px;
+    min-width: 500px;
+  }
+
   .bit {
-    width: 17px;
+    width: 18px;
+    padding: 4px 0;
+  }
+
+  .subnet-details {
+    display: flex;
+    padding: 14px;
+  }
+
+  .subnet-details h2 {
+    font-size: 23px;
   }
 
   .address-box div {
-    font-size: 19px;
+    font-size: 20px;
+  }
+
+  .table-section {
+    padding: 10px;
   }
 
 }
