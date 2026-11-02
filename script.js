@@ -1,194 +1,241 @@
-let subnetStates=[];
-let subnetBitsElements=[];
-let timer=null;
-let currentIndex=0;
-let newCidr=0;
-let borrowedBits=0;
 
-/* ---------- utils ---------- */
-
-// ασφαλής μετατροπή decimal IP σε binary (ανά byte)
-function ipToBinary(ip){
-  return ip.split('.')
-    .map(octet => parseInt(octet).toString(2).padStart(8,'0'))
-    .join('');
+* {
+  box-sizing: border-box;
 }
 
-function ipToInt(ip){
-  return ip.split('.').reduce((a,b)=>(a<<8)+ +b,0) >>>0;
+body {
+  font-family: Arial, sans-serif;
+  background: #f3f3f3;
+  padding: 20px;
+  margin: 0;
 }
 
-function intToIp(int){
-  return [(int>>>24)&255,(int>>>16)&255,(int>>>8)&255,int&255].join('.');
+h1 {
+  text-align: center;
 }
 
-function intToBinary(ipInt){
-  return [
-    (ipInt>>>24)&255,
-    (ipInt>>>16)&255,
-    (ipInt>>>8)&255,
-    ipInt&255
-  ].map(o=>o.toString(2).padStart(8,'0')).join('');
+.controls {
+  background: white;
+  padding: 18px;
+  border-radius: 10px;
+  margin-bottom: 20px;
 }
 
-/* ---------- start ---------- */
+input {
+  padding: 7px;
+  margin: 5px;
+  max-width: 150px;
+}
 
-function start(){
+button {
+  padding: 10px 14px;
+  margin: 4px;
+  border: none;
+  border-radius: 6px;
+  background: #1976d2;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-  clearInterval(timer);
-  currentIndex=0;
+button:hover {
+  background: #125ca5;
+}
 
-  const ip=document.getElementById("ip").value;
-  const base=parseInt(document.getElementById("baseCidr").value);
-  const mode=document.querySelector("input[name=mode]:checked").value;
+button:active {
+  transform: scale(0.95);
+}
 
-  if(mode==="subnets"){
-    const count=parseInt(document.getElementById("subnetCount").value);
-    borrowedBits=Math.ceil(Math.log2(count));
-    newCidr=base+borrowedBits;
-  }else{
-    const hosts=parseInt(document.getElementById("hostCount").value);
-    const needed=Math.ceil(Math.log2(hosts+2));
-    newCidr=32-needed;
-    borrowedBits=newCidr-base;
+#bits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-family: monospace;
+  font-size: 22px;
+  margin: 15px 0;
+  align-items: center;
+}
+
+.bit {
+  width: 20px;
+  text-align: center;
+  border-radius: 4px;
+  padding: 3px 0;
+  transition: transform 0.25s;
+}
+
+.network {
+  background: #4caf50;
+  color: white;
+}
+
+.subnet {
+  background: #ff9800;
+  color: white;
+}
+
+.host {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.dot {
+  font-weight: bold;
+  margin: 0 5px;
+  color: #222;
+}
+
+.legend {
+  margin-bottom: 25px;
+}
+
+.legend span {
+  display: inline-block;
+  padding: 6px 10px;
+  margin-right: 8px;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+}
+
+.flip {
+  transform: scale(1.5);
+  box-shadow: 0 0 8px #ff9800;
+}
+
+/* SUBNET DETAILS */
+
+.subnet-details {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+  box-shadow: 0 2px 8px #00000012;
+}
+
+.subnet-details h2 {
+  text-align: center;
+}
+
+.counter-box {
+  background: #263238;
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+#subnetCounter {
+  color: #ffca28;
+  font-family: monospace;
+  font-size: 28px;
+  margin: 0 12px;
+}
+
+#subnetProgress {
+  display: block;
+  font-size: 13px;
+  margin-top: 6px;
+  color: #ddd;
+}
+
+.address-box {
+  padding: 18px;
+  border-radius: 9px;
+  margin: 12px 0;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.address-box h3 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.address-box div {
+  font-family: monospace;
+  font-size: 24px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.network-address {
+  background: #e8f5e9;
+  border-left: 6px solid #4caf50;
+  color: #1b5e20;
+}
+
+.broadcast-address {
+  background: #ffebee;
+  border-left: 6px solid #e53935;
+  color: #b71c1c;
+}
+
+/* TABLE */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  min-width: 650px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 9px;
+  text-align: center;
+}
+
+th {
+  background: #333;
+  color: white;
+}
+
+.activeRow {
+  background: #ffe082 !important;
+  font-weight: bold;
+  outline: 2px solid #ff9800;
+}
+
+/* MOBILE */
+
+@media(max-width:600px) {
+
+  body {
+    padding: 10px;
   }
 
-  document.getElementById("info").innerText=
-  `Νέο CIDR: /${newCidr} | Borrowed bits: ${borrowedBits}`;
-
-  buildBinary(ip,base);
-  generateSubnets(ipToInt(ip),base);
-}
-
-/* ---------- build binary ---------- */
-
-function buildBinary(ip,base){
-
-  const div=document.getElementById("bits");
-  div.innerHTML="";
-  subnetBitsElements=[];
-
-  const bin=ipToBinary(ip);
-
-  for(let i=0;i<32;i++){
-
-    const span=document.createElement("span");
-    span.textContent=bin[i];
-    span.className="bit";
-
-    if(i<base) span.classList.add("network");
-    else if(i<base+borrowedBits){
-      span.classList.add("subnet");
-      subnetBitsElements.push(span);
-    }
-    else span.classList.add("host");
-
-    div.appendChild(span);
-
-    if((i+1)%8===0 && i!==31){
-      const dot=document.createElement("span");
-      dot.textContent=".";
-      dot.className="dot";
-      div.appendChild(dot);
-    }
-  }
-}
-
-/* ---------- generate subnets ---------- */
-
-function generateSubnets(ipInt,base){
-
-  subnetStates=[];
-  const tbody=document.querySelector("#table tbody");
-  tbody.innerHTML="";
-
-  const hostBits=32-newCidr;
-  const block=2**hostBits;
-  const total=2**borrowedBits;
-
-  for(let i=0;i<total;i++){
-
-    const net=ipInt + i*block;
-    subnetStates.push(intToBinary(net));
-
-    tbody.innerHTML+=`
-    <tr>
-      <td>${i}</td>
-      <td>${intToIp(net)}</td>
-      <td>${intToIp(net+1)}</td>
-      <td>${intToIp(net+block-2)}</td>
-      <td>${intToIp(net+block-1)}</td>
-    </tr>`;
-  }
-}
-
-/* ---------- highlight ---------- */
-
-function highlightRow(index){
-  const rows=document.querySelectorAll("#table tbody tr");
-  rows.forEach(r=>r.classList.remove("activeRow"));
-  if(rows[index]) rows[index].classList.add("activeRow");
-}
-
-/* ---------- step animation (σωστό binary counter) ---------- */
-
-function stepSubnet(){
-
-  if(!subnetStates.length) return;
-
-  const state=subnetStates[currentIndex];
-  const base=parseInt(document.getElementById("baseCidr").value);
-
-  // LSB first (δεξιά → αριστερά)
-  for(let i=subnetBitsElements.length-1;i>=0;i--){
-
-    const el=subnetBitsElements[i];
-    const pos=base+i;
-
-    setTimeout(()=>{
-
-      el.classList.add("flip");
-      el.textContent=state[pos];
-
-      setTimeout(()=>{
-        el.classList.remove("flip");
-      },150);
-
-    }, (subnetBitsElements.length-1-i)*120);
+  h1 {
+    font-size: 23px;
   }
 
-  highlightRow(currentIndex);
+  .controls {
+    padding: 12px;
+  }
 
-  currentIndex++;
-  if(currentIndex>=subnetStates.length)
-    currentIndex=0;
+  button {
+    width: 100%;
+    margin: 5px 0;
+  }
+
+  #bits {
+    gap: 2px;
+    font-size: 18px;
+  }
+
+  .bit {
+    width: 17px;
+  }
+
+  .address-box div {
+    font-size: 19px;
+  }
+
 }
-
-/* ---------- controls ---------- */
-
-function play(){
-  if(timer) return;
-  timer=setInterval(stepSubnet,900);
-}
-
-function pause(){
-  clearInterval(timer);
-  timer=null;
-}
-
-function reset(){
-  pause();
-  currentIndex=0;
-  highlightRow(-1);
-  start();
-}
-
-/* ---------- events ---------- */
-
-document.getElementById("startBtn").addEventListener("click",start);
-document.getElementById("playBtn").addEventListener("click",play);
-document.getElementById("pauseBtn").addEventListener("click",pause);
-document.getElementById("nextBtn").addEventListener("click",stepSubnet);
-document.getElementById("resetBtn").addEventListener("click",reset);
-
-start();
